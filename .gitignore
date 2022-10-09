@@ -1,0 +1,6 @@
+/back/node_modules
+/back/.env
+/back/.DS_Store
+/front/node_modules
+/front/.DS_Store
+/front/.next

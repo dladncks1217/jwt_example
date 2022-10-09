@@ -1,0 +1,111 @@
+const router = require("express").Router();
+const bcrypt = require("bcrypt");
+const { User } = require("../models");
+const redisClient = require("../utils/redis-util");
+const jwt = require("../utils/jwt-util");
+
+router.post("/join", async (req, res, next) => {
+  const { email, nick, password, role } = req.body;
+  try {
+    const exUser = await User.findOne({ where: { email } });
+    if (exUser) {
+      return res.json("이미 가입된 이메일입니다.");
+    }
+    console.time("암호화 시간 확인용");
+    const hash = await bcrypt.hash(password, 12);
+    console.timeEnd("암호화 시간 확인용");
+    const userData = await User.create({
+      email,
+      nick,
+      password: hash,
+      role,
+    });
+
+    return res.json(userData);
+  } catch (error) {
+    console.error(error);
+    return next(error);
+  }
+});
+
+router.post("/login", async (req, res) => {
+  //... user 로그인 로직
+
+  const { email, password } = req.body;
+
+  const exUser = await User.findOne({ where: { email } });
+
+  console.log("exUser" + exUser.nick);
+  if (exUser) {
+    const result = await bcrypt.compare(password, exUser.password);
+    if (result) {
+      // id, pw가 맞다면..
+      // access token과 refresh token을 발급합니다.
+      const tokenData = {
+        id: exUser.id,
+        nick: exUser.nick,
+        role: exUser.role,
+      };
+
+      const accessToken = jwt.sign(tokenData);
+      const refreshToken = jwt.refresh();
+
+      // 발급한 refresh token을 redis에 key를 user의 id로 하여 저장합니다.
+
+      redisClient.set(tokenData.id.toString(), refreshToken);
+
+      res.cookie("refreshToken", refreshToken, {
+        path: "/",
+        maxAge: 10080000,
+        httpOnly: true,
+      });
+      res.status(200).send({
+        // client에게 토큰 모두를 반환합니다.
+        ok: true,
+        data: {
+          accessToken,
+          // refreshToken,
+        },
+      });
+    } else {
+      res.status(401).send({
+        ok: false,
+        message: "wrong password",
+      });
+    }
+  } else {
+    res.status(401).send({
+      ok: false,
+      message: "없는 사용자입니다.",
+    });
+  }
+});
+
+router.post("/getnewtoken", async (req, res, next) => {
+  try {
+    const token = req.headers.authorization.split("Bearer ")[1];
+    if (jwt.refreshVerify(token)) {
+      const { userId } = req.body;
+      const exUser = await User.findOne({ where: { id: userId } });
+      let userData = {
+        id: exUser.id,
+        nick: exUser.nick,
+        role: exUser.role,
+      };
+      const newToken = jwt.sign(userData);
+      return res.json({ accessToken: newToken });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.send("failed getNewToken");
+  }
+});
+
+router.post("/refresh", (req, res, next) => {
+  try {
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+module.exports = router;
