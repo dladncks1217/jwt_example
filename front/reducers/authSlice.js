@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { logOutAction } from "../actions/auth";
 import { signUpAction } from "../actions/auth";
 import { loginAction, getUserDataAction } from "../actions/auth";
 
@@ -11,6 +12,7 @@ const initialState = {
   isSignedUp: false,
   signUpErrorReason: "",
   isLoggedIn: false,
+  isLoggingOut: false,
   authErrorReason: "",
   getUserErrorReason: "",
 };
@@ -35,14 +37,22 @@ export const authSlice = createSlice({
       state.isLoggingIn = true;
     },
     [loginAction.fulfilled](state, action) {
-      const data = action.payload;
-      // state.user = data.user;
       state.isLoggingIn = false;
       state.isLoggedIn = true;
-      // state.isAdmin = data.user.isAdmin;
     },
     [loginAction.rejected](state, action) {
       state.isLoggingIn = false;
+      state.authErrorReason = action.error;
+    },
+    [logOutAction.pending](state, action) {
+      state.isLoggingOut = true;
+    },
+    [logOutAction.fulfilled](state, action) {
+      state.isLoggingOut = false;
+      state.isLoggedIn = false;
+    },
+    [logOutAction.rejected](state, action) {
+      state.isLoggingOut = false;
       state.authErrorReason = action.error;
     },
     [getUserDataAction.pending](state, action) {

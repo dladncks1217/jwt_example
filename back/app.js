@@ -8,9 +8,6 @@ const authRouter = require("./routes/auth");
 const { sequelize } = require("./models");
 const Redis = require("redis");
 
-// const redisClient = new Redis.createClient();
-// const router = express.Router();
-
 require("dotenv").config();
 
 const app = express();

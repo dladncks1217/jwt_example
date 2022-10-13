@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { getCookie } from "../utils/cookie";
+import { getCookie, setCookie } from "../utils/cookie";
 import { getExpiredTokenToAccessToken } from "../utils/token";
 
 axios.defaults.baseURL = "http://localhost:8001";
@@ -43,12 +43,14 @@ export const loginAction = createAsyncThunk(
         },
       });
 
-      localStorage.setItem("accessToken", res.data.data.accessToken);
-      localStorage.setItem("refreshToken", res.data.data.refreshToken);
-      axios.defaults.headers.common["x-access-token"] =
-        res.data.data.accessToken; // axios동작 시 헤더에 기본으로 붙도록
+      // accessToken의 경우 localStorage에 저장.
+      localStorage.setItem("accessToken", result.data.data.accessToken);
+      setCookie("refreshToken", result.data.data.refreshToken);
 
-      return result;
+      axios.defaults.headers.common["x-access-token"] =
+        result.data.data.accessToken; // axios동작 시 헤더에 기본으로 붙도록
+
+      if (result.data.ok) return (location.href = "/");
     } catch (err) {
       console.error(err);
     }
@@ -59,7 +61,6 @@ export const logOutAction = createAsyncThunk(
   "auth/logout",
   async (data, thunkAPI) => {
     localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
   }
 );
 

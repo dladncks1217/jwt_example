@@ -9,6 +9,7 @@ module.exports = {
     // access token 발급
     const payload = {
       // access token에 들어갈 payload
+      id: user.id,
       nick: user.nick,
       role: user.role,
     };
@@ -16,7 +17,7 @@ module.exports = {
     return jwt.sign(payload, secret, {
       // secret으로 sign하여 발급하고 return
       algorithm: "HS256", // 암호화 알고리즘
-      expiresIn: "1m", // 유효기간
+      expiresIn: "10s", // 유효기간
     });
   },
   verify: (token) => {
@@ -46,14 +47,13 @@ module.exports = {
   },
   refreshVerify: async (token, userId) => {
     // refresh token 검증
-    /* redis 모듈은 기본적으로 promise를 반환하지 않으므로,
-       promisify를 이용하여 promise를 반환하게 해줍니다.*/
+    // redis 모듈은 기본적으로 promise를 반환하지 않기에, promisify를 이용하여 promise를 반환하도록.
     const getAsync = promisify(redisClient.get).bind(redisClient);
 
-    // if (token) return true;
-    // // redis 없으니 일단 true반환함
     try {
-      const data = await getAsync(userId); // refresh token 가져오기
+      // console.log(await getAsync("1"));
+      const data = await getAsync.get(userId); // refresh token 가져오기
+
       if (token === data) {
         try {
           jwt.verify(token, secret);

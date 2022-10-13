@@ -2,7 +2,9 @@ const router = require("express").Router();
 const bcrypt = require("bcrypt");
 const { User } = require("../models");
 const redisClient = require("../utils/redis-util");
+const jsonwebtoken = require("jsonwebtoken");
 const jwt = require("../utils/jwt-util");
+const { verify, refreshVerify, sign } = require("../utils/jwt-util");
 
 router.post("/join", async (req, res, next) => {
   const { email, nick, password, role } = req.body;
@@ -30,7 +32,6 @@ router.post("/join", async (req, res, next) => {
 
 router.post("/login", async (req, res) => {
   //... user 로그인 로직
-
   const { email, password } = req.body;
 
   const exUser = await User.findOne({ where: { email } });
@@ -42,7 +43,7 @@ router.post("/login", async (req, res) => {
       // id, pw가 맞다면..
       // access token과 refresh token을 발급합니다.
       const tokenData = {
-        id: exUser.id,
+        id: exUser.id.toString(),
         nick: exUser.nick,
         role: exUser.role,
       };
@@ -54,17 +55,12 @@ router.post("/login", async (req, res) => {
 
       redisClient.set(tokenData.id.toString(), refreshToken);
 
-      res.cookie("refreshToken", refreshToken, {
-        path: "/",
-        maxAge: 10080000,
-        httpOnly: true,
-      });
       res.status(200).send({
-        // client에게 토큰 모두를 반환합니다.
+        // client에게 accessToken만 반환합니다.
         ok: true,
         data: {
           accessToken,
-          // refreshToken,
+          refreshToken,
         },
       });
     } else {
@@ -82,29 +78,54 @@ router.post("/login", async (req, res) => {
 });
 
 router.post("/getnewtoken", async (req, res, next) => {
-  try {
-    const token = req.headers.authorization.split("Bearer ")[1];
-    if (jwt.refreshVerify(token)) {
-      const { userId } = req.body;
-      const exUser = await User.findOne({ where: { id: userId } });
-      let userData = {
-        id: exUser.id,
-        nick: exUser.nick,
-        role: exUser.role,
-      };
-      const newToken = jwt.sign(userData);
-      return res.json({ accessToken: newToken });
-    }
-  } catch (err) {
-    console.error(err);
-    return res.send("failed getNewToken");
-  }
-});
+  if (req.headers.authorization && req.headers.refresh) {
+    const accessToken = req.headers.authorization.split("Bearer ")[1];
+    const refreshToken = req.headers.refresh;
 
-router.post("/refresh", (req, res, next) => {
-  try {
-  } catch (err) {
-    console.error(err);
+    // expired일 경우.
+    const authResult = verify(accessToken);
+
+    // access token 디코딩 -> 유저정보 가져오기
+    // const decoded = jwt.decoded(accessToken);
+    const decoded = jsonwebtoken.decode(accessToken);
+
+    // 디코딩 결과 없으면 권한 없음 응답.
+    if (decoded === null) {
+      res.status(401).send({
+        ok: false,
+        message: "No authorized!",
+      });
+    }
+
+    // refreshToken 검증.
+    const refreshResult = await refreshVerify(refreshToken, decoded.id);
+
+    // access token이 만료되지 않은 경우.
+    if (authResult.ok === false && authResult.message === "jwt expired") {
+      // refreshtoken도 만료되었을 경우 -> 아예 새로 로그인해야함.
+      if (refreshResult.ok === false) {
+        res.status(401).send({
+          ok: false,
+          message: "No authorized",
+        });
+      } else {
+        // access Token만 만료된 경우 (refresh token은 살아있고)
+        const new_accessToken = sign({
+          id: decoded.id,
+          nick: decoded.nick,
+          role: decoded.role,
+        });
+
+        res.status(200).send({
+          // 새로 발급한 access token과 원래 있던 refresh token 모두 클라이언트에게 반환.
+          ok: true,
+          data: {
+            accessToken: new_accessToken,
+            refreshToken,
+          },
+        });
+      }
+    }
   }
 });
 

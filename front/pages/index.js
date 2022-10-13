@@ -17,16 +17,16 @@ const Index = () => {
     location.href = "/signup";
   });
 
-  const onClickLogoutButton = useCallback((e) => {
-    dispatch(logOutAction());
-  });
-
-  useEffect(
+  const onClickLogoutButton = useCallback(
     (e) => {
-      getUserDataAction();
+      dispatch(logOutAction());
     },
-    [isLoggedIn, nick]
+    [isLoggedIn]
   );
+
+  useEffect(() => {
+    dispatch(getUserDataAction());
+  }, [isLoggedIn, nick]);
 
   return (
     <>
