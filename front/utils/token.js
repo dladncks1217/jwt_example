@@ -15,7 +15,8 @@ export const getExpiredTokenToAccessToken = async () => {
       },
     });
 
-    return localStorage.setItem("accessToken", result.data.data.accessToken);
+    localStorage.setItem("accessToken", result.data.data.accessToken);
+    return result;
   } catch (err) {
     console.error(err);
   }

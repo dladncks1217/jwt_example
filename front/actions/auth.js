@@ -19,8 +19,8 @@ export const signUpAction = createAsyncThunk(
           role: "guest",
         },
       });
-
-      return result;
+      console.log(result);
+      if (result.status === 200) return (location.href = "/");
     } catch (err) {
       console.error(err);
     }
@@ -86,7 +86,7 @@ export const getUserDataAction = createAsyncThunk(
         } else if (err.response.data.message === "jwt expired") {
           try {
             // 토큰 재발급
-            getExpiredTokenToAccessToken();
+            return getExpiredTokenToAccessToken();
           } catch (e) {
             console.error(e);
           }

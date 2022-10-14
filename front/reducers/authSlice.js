@@ -1,7 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { logOutAction } from "../actions/auth";
-import { signUpAction } from "../actions/auth";
-import { loginAction, getUserDataAction } from "../actions/auth";
+import {
+  loginAction,
+  getUserDataAction,
+  signUpAction,
+  logOutAction,
+} from "../actions/auth";
 
 const initialState = {
   nick: "",
@@ -59,8 +62,11 @@ export const authSlice = createSlice({
       // 받아오는중
     },
     [getUserDataAction.fulfilled](state, action) {
-      console.log(action);
-      if (action.payload) {
+      if (action.payload === "refresh") {
+        state.isLoggedIn = true;
+        state.nick = action.payload.data.nick;
+        state.role = action.payload.data.role;
+      } else if (action.payload) {
         state.userId = action.payload.data.userId;
         state.nick = action.payload.data.nick;
         state.role = action.payload.data.role;

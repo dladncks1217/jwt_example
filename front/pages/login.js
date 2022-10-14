@@ -35,7 +35,9 @@ const Login = () => {
   return (
     <>
       <form onSubmit={onSubmitData}>
-        <input type="email" value={email} onChange={onChangeEmail} />
+        email <input type="email" value={email} onChange={onChangeEmail} />{" "}
+        <br />
+        password{" "}
         <input type="password" value={password} onChange={onChangePassword} />
         <button type="submit">로그인</button>
       </form>

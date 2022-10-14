@@ -122,6 +122,9 @@ router.post("/getnewtoken", async (req, res, next) => {
           data: {
             accessToken: new_accessToken,
             refreshToken,
+            userId: decoded.id,
+            nick: decoded.nick,
+            role: decoded.role,
           },
         });
       }

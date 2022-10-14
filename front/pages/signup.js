@@ -26,28 +26,32 @@ const SignUp = () => {
     setNick(e.target.value);
   });
 
-  const onSubmit = useCallback(
+  const onSubmitData = useCallback(
     (e) => {
       e.preventDefault();
       dispatch(signUpAction({ email, password, nick }));
     },
-    [email, password]
+    [email, password, nick]
   );
 
   return (
     <>
-      <form>
-        <input type="email" value={email} onChange={onChangeEmail} />
+      <form onSubmit={onSubmitData}>
+        email <input type="email" value={email} onChange={onChangeEmail} />
+        <br />
+        password{" "}
         <input type="password" value={password} onChange={onChangePassword} />
+        <br />
+        passwordcheck{" "}
         <input
           type="password"
           value={passwordcheck}
           onChange={onChangePasswordCheck}
         />
-        <input type="text" value={nick} onChange={onChangeNick} />
-        <button type="submit" onSubmit={onSubmit}>
-          가입
-        </button>
+        <br />
+        nick <input type="text" value={nick} onChange={onChangeNick} />
+        <br />
+        <button type="submit">가입</button>
       </form>
     </>
   );
