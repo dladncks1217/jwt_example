@@ -54,6 +54,11 @@ router.post("/login", async (req, res) => {
       // 발급한 refresh token을 redis에 key를 user의 id로 하여 저장합니다.
 
       redisClient.set(tokenData.id.toString(), refreshToken);
+      res.cookie("refreshToken", refreshToken, {
+        maxAge: 60 * 60 * 24 * 14,
+        httpOnly: true,
+        sameSite: "lax",
+      });
 
       res.status(200).send({
         // client에게 accessToken만 반환합니다.
@@ -78,15 +83,14 @@ router.post("/login", async (req, res) => {
 });
 
 router.post("/getnewtoken", async (req, res, next) => {
-  if (req.headers.authorization && req.headers.refresh) {
+  if (req.headers.authorization && req.headers.cookie) {
     const accessToken = req.headers.authorization.split("Bearer ")[1];
-    const refreshToken = req.headers.refresh;
+    const refreshToken = req.headers.cookie.split("=")[1];
 
     // expired일 경우.
     const authResult = verify(accessToken);
 
     // access token 디코딩 -> 유저정보 가져오기
-    // const decoded = jwt.decoded(accessToken);
     const decoded = jsonwebtoken.decode(accessToken);
 
     // 디코딩 결과 없으면 권한 없음 응답.

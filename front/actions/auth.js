@@ -3,7 +3,7 @@ import axios from "axios";
 import { getCookie, setCookie } from "../utils/cookie";
 import { getExpiredTokenToAccessToken } from "../utils/token";
 
-axios.defaults.baseURL = "http://localhost:8001";
+axios.defaults.baseURL = "http://localhost:3000/api/";
 
 export const signUpAction = createAsyncThunk(
   "auth/join",
@@ -42,10 +42,10 @@ export const loginAction = createAsyncThunk(
           password: data.password,
         },
       });
-
+      console.log(result);
       // accessToken의 경우 localStorage에 저장.
       localStorage.setItem("accessToken", result.data.data.accessToken);
-      setCookie("refreshToken", result.data.data.refreshToken);
+      // setCookie("refreshToken", result.data.data.refreshToken);
 
       axios.defaults.headers.common["x-access-token"] =
         result.data.data.accessToken; // axios동작 시 헤더에 기본으로 붙도록

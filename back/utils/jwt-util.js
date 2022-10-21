@@ -51,7 +51,6 @@ module.exports = {
     const getAsync = promisify(redisClient.get).bind(redisClient);
 
     try {
-      // console.log(await getAsync("1"));
       const data = await getAsync.get(userId); // refresh token 가져오기
 
       if (token === data) {
