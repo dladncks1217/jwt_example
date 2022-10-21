@@ -57,7 +57,7 @@ router.post("/login", async (req, res) => {
       res.cookie("refreshToken", refreshToken, {
         maxAge: 60 * 60 * 24 * 14,
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: "strict",
       });
 
       res.status(200).send({
@@ -65,7 +65,6 @@ router.post("/login", async (req, res) => {
         ok: true,
         data: {
           accessToken,
-          refreshToken,
         },
       });
     } else {
@@ -125,7 +124,6 @@ router.post("/getnewtoken", async (req, res, next) => {
           ok: true,
           data: {
             accessToken: new_accessToken,
-            refreshToken,
             userId: decoded.id,
             nick: decoded.nick,
             role: decoded.role,

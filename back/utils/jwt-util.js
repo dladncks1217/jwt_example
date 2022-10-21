@@ -27,6 +27,7 @@ module.exports = {
       decoded = jwt.verify(token, secret);
       return {
         ok: true,
+        userId: decoded.id,
         nick: decoded.nick,
         role: decoded.role,
       };

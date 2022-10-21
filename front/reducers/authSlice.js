@@ -62,12 +62,9 @@ export const authSlice = createSlice({
       // 받아오는중
     },
     [getUserDataAction.fulfilled](state, action) {
-      if (action.payload === "refresh") {
-        state.isLoggedIn = true;
-        state.nick = action.payload.data.nick;
-        state.role = action.payload.data.role;
-      } else if (action.payload) {
+      if (action.payload) {
         state.userId = action.payload.data.userId;
+        console.log(action.payload.data);
         state.nick = action.payload.data.nick;
         state.role = action.payload.data.role;
         state.isLoggedIn = true;
